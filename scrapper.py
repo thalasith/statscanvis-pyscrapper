@@ -1,9 +1,9 @@
 import pandas as pd
 import requests
-import re
 import json
 from bs4 import BeautifulSoup
 
+# Helper function to find data between two strings
 def find_between( s, first, last ):
     try:
         start = s.index( first ) + len( first )
@@ -11,6 +11,8 @@ def find_between( s, first, last ):
         return s[start:end]
     except ValueError:
         return ""
+
+# Helper function to check if a string is a float
 def isfloat(num):
     try:
         float(num)
@@ -18,8 +20,10 @@ def isfloat(num):
     except ValueError:
         return False
 
-if __name__ == '__main__':
-    url = 'https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=1410020101&pickMembers%5B0%5D=1.3&pickMembers%5B1%5D=2.1&cubeTimeFrame.startMonth=06&cubeTimeFrame.startYear=2022&cubeTimeFrame.endMonth=10&cubeTimeFrame.endYear=2022&referencePeriods=20220601%2C20221001'
+def simple_scrapper(url, filter_list=[]):
+    # Loading and parsing the data from the StatsCan website.
+    # Data is presented as a jquery function that is called to generate the table. We parse out the relevant code and return back the data.
+
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
     result = find_between(soup.prettify(), 'tableContainerElement = $(".tableContainer").clone();', 'window.addEventListener("resize", function() {') + 'end'
@@ -27,13 +31,20 @@ if __name__ == '__main__':
     json_data = json.loads(data)
     rows = json_data['rows']
 
+    # We need to transform the data into a format that is easier to work with.
+
+
     new_rows = []
     for row in rows:
         values = row['values']
         for value in values:
             new_rows.append(value["value"])
+        
+    
     category = next(item for item in json_data['headers']["columnHeaders"] if item["name"] == "Geography")
     category_selected = category["values"][0]["value"]
+
+    # Return the headers for the data table.
     headers = next(item for item in json_data['headers']["columnHeaders"] if item["name"] == "Reference period")
     header_values = []
     for item in headers["values"]:
@@ -69,6 +80,6 @@ if __name__ == '__main__':
 
     df = pd.DataFrame(test_data).transpose().drop("key")
     df.columns = keys
-    df["category"] = category_selected
     df["date"] = soup.find_all('meta', attrs={'name': 'dcterms.issued'})[0]['content']
-    print(df.head())
+    df["category"] = category_selected
+    return df.to_json(orient='index')
