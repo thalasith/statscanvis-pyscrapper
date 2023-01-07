@@ -20,10 +20,9 @@ def isfloat(num):
     except ValueError:
         return False
 
-def simple_scrapper(url, filter_list=[]):
+def simple_scrapper(url, filter_names):
     # Loading and parsing the data from the StatsCan website.
     # Data is presented as a jquery function that is called to generate the table. We parse out the relevant code and return back the data.
-
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
     result = find_between(soup.prettify(), 'tableContainerElement = $(".tableContainer").clone();', 'window.addEventListener("resize", function() {') + 'end'
@@ -39,10 +38,6 @@ def simple_scrapper(url, filter_list=[]):
         values = row['values']
         for value in values:
             new_rows.append(value["value"])
-        
-    
-    category = next(item for item in json_data['headers']["columnHeaders"] if item["name"] == "Geography")
-    category_selected = category["values"][0]["value"]
 
     # Return the headers for the data table.
     headers = next(item for item in json_data['headers']["columnHeaders"] if item["name"] == "Reference period")
@@ -71,7 +66,7 @@ def simple_scrapper(url, filter_list=[]):
         index=0
         temp_data = {}
         temp_data["key"] = key
-        key = key.replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()
+        key = key.replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()[:60]
         keys.append(key)
         for i in value:
             temp_data[header_values[index]] = i
@@ -81,5 +76,25 @@ def simple_scrapper(url, filter_list=[]):
     df = pd.DataFrame(test_data).transpose().drop("key")
     df.columns = keys
     df["date"] = soup.find_all('meta', attrs={'name': 'dcterms.issued'})[0]['content']
-    df["category"] = category_selected
-    return df.to_json(orient='index')
+
+    df['month'] = df.index
+    df.reset_index(drop=True, inplace=True)
+
+    for filter_name in filter_names:
+        new_name = filter_name.replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()[:60]
+        df[new_name] = next(item for item in json_data['headers']["columnHeaders"] if item["name"] == filter_name)["values"][0]["value"]
+    
+    return df
+
+    # # Connecting to Planet Scale
+    # ssl_args = {'ssl_ca': "/etc/ssl/cert.pem"}
+
+    # conn_string = 'mysql+pymysql://' + os.getenv("USERNAME") + ':' + os.getenv("PASSWORD") + '@' + os.getenv("HOST") + '/' + os.getenv("DATABASE") 
+
+    # engine = create_engine(conn_string, connect_args=ssl_args)
+
+
+    # with engine.begin() as engine:
+    #     df.to_sql('statscan', engine, if_exists='replace', index=False)
+    #     print("Data inserted into database")
+
