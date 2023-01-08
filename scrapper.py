@@ -2,6 +2,10 @@ import pandas as pd
 import requests
 import json
 from bs4 import BeautifulSoup
+from sqlalchemy import create_engine
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Helper function to find data between two strings
 def find_between( s, first, last ):
@@ -77,24 +81,28 @@ def simple_scrapper(url, filter_names):
     df.columns = keys
     df["date"] = soup.find_all('meta', attrs={'name': 'dcterms.issued'})[0]['content']
 
-    df['month'] = df.index
-    df.reset_index(drop=True, inplace=True)
-
     for filter_name in filter_names:
         new_name = filter_name.replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()[:60]
         df[new_name] = next(item for item in json_data['headers']["columnHeaders"] if item["name"] == filter_name)["values"][0]["value"]
     
+    df['month'] = df.index
+    df.reset_index(drop=True, inplace=True)
+    
     return df
 
-    # # Connecting to Planet Scale
-    # ssl_args = {'ssl_ca': "/etc/ssl/cert.pem"}
+def drop_table(table_list):
+    # Connecting to Planet Scale
+    ssl_args = {'ssl_ca': "/etc/ssl/cert.pem"}
 
-    # conn_string = 'mysql+pymysql://' + os.getenv("USERNAME") + ':' + os.getenv("PASSWORD") + '@' + os.getenv("HOST") + '/' + os.getenv("DATABASE") 
+    conn_string = 'mysql+pymysql://' + os.getenv("USERNAME") + ':' + os.getenv("PASSWORD") + '@' + os.getenv("HOST") + '/' + os.getenv("DATABASE") 
 
-    # engine = create_engine(conn_string, connect_args=ssl_args)
+    table_name = ["monthly_employment_by_industry"]
 
-
-    # with engine.begin() as engine:
-    #     df.to_sql('statscan', engine, if_exists='replace', index=False)
-    #     print("Data inserted into database")
+    for table in table_name:
+        engine = create_engine(conn_string, connect_args=ssl_args)
+        drop_table_query = 'DROP TABLE ' + table + ';'
+        # print(drop_table_query)
+        with engine.connect() as con:
+            con.execute(drop_table_query)
+        print("Successfully dropped table " + table)
 
