@@ -27,6 +27,8 @@ def isfloat(num):
 def simple_scrapper(url, filter_names):
     # Loading and parsing the data from the StatsCan website.
     # Data is presented as a jquery function that is called to generate the table. We parse out the relevant code and return back the data.
+    #The data as of 2021-03-01 is between a script tag with the following id: "tableContainerElement = $(".tableContainer").clone();" 
+    # and "window.addEventListener("resize", function() {"
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
     result = find_between(soup.prettify(), 'tableContainerElement = $(".tableContainer").clone();', 'window.addEventListener("resize", function() {') + 'end'
@@ -35,8 +37,8 @@ def simple_scrapper(url, filter_names):
     rows = json_data['rows']
 
     # We need to transform the data into a format that is easier to work with.
-
-
+    # The data is presented as a list of dictionaries. Each dictionary contains a list of dictionaries.
+    # We need to flatten the data into a list of dictionaries.
     new_rows = []
     for row in rows:
         values = row['values']
@@ -44,6 +46,7 @@ def simple_scrapper(url, filter_names):
             new_rows.append(value["value"])
 
     # Return the headers for the data table.
+    # The headers are presented as a list of dictionaries. Each dictionary contains a list of dictionaries.
     headers = next(item for item in json_data['headers']["columnHeaders"] if item["name"] == "Reference period")
     header_values = []
     for item in headers["values"]:
