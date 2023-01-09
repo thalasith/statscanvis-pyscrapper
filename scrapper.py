@@ -3,6 +3,7 @@ import requests
 import json
 from bs4 import BeautifulSoup
 from sqlalchemy import create_engine
+import itertools
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -34,53 +35,41 @@ def simple_scrapper(url, filter_names):
     result = find_between(soup.prettify(), 'tableContainerElement = $(".tableContainer").clone();', 'window.addEventListener("resize", function() {') + 'end'
     data = find_between(result, 'prepareTable(', '\n')[:-2]
     json_data = json.loads(data)
-    rows = json_data['rows']
-
-    # We need to transform the data into a format that is easier to work with.
-    # The data is presented as a list of dictionaries. Each dictionary contains a list of dictionaries.
-    # We need to flatten the data into a list of dictionaries.
-    new_rows = []
-    for row in rows:
-        values = row['values']
-        for value in values:
-            new_rows.append(value["value"])
 
     # Return the headers for the data table.
-    # The headers are presented as a list of dictionaries. Each dictionary contains a list of dictionaries.
+    # The headers contain the data for our columns. We need to extract the values from the headers and return them as a list.
     headers = next(item for item in json_data['headers']["columnHeaders"] if item["name"] == "Reference period")
     header_values = []
     for item in headers["values"]:
             header_values.append(item["value"])
-    rows_values = {}
-    key = ""
-    data = []
-    index = 0
-    for row in new_rows:
-        temp_data = {}
-        if not isfloat(row):
-            key = row
-            rows_values[key] = []
-            data = []
-            index = 0
-        if isfloat(row):
-            data.append(float(row))
-            rows_values[key] = data
-            index += 1
+    
 
-    test_data = []
+    # We need to transform the data into a format that is easier to work with.
+    # The data is presented as a list of dictionaries. Each dictionary contains a list of dictionaries.
+    # We need to flatten the data into a list of dictionaries and afterwards return a list of the values from the dictionary.
+    rows = json_data['rows']
+    flattened_rows = list(itertools.chain.from_iterable([row['values'] for row in rows]))
+    new_rows = []
+    for row in flattened_rows:
+        new_rows.append(row['value'])
+    
+    # Because the new rows are now a list with mixed data types, we need to separate the data into a dictionary.
     keys = []
-    for key, value in rows_values.items():
-        index=0
-        temp_data = {}
-        temp_data["key"] = key
-        key = key.replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()[:60]
-        keys.append(key)
-        for i in value:
-            temp_data[header_values[index]] = i
-            index += 1
-        test_data.append(temp_data)
+    data = {}
 
-    df = pd.DataFrame(test_data).transpose().drop("key")
+    for row in new_rows:
+        if not isfloat(row):
+            key = row.replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()[:60]
+            keys.append(key)
+            data[key] = []
+        if isfloat(row):
+            data[key].append(float(row))
+
+    rows_values = {key: value for key, value in data.items()}
+    # We transform the data to its final format and return it as a pandas dataframe.
+    final_data = [{"key": name, **{month: value for month, value in zip(header_values, values)}} for name, values in rows_values.items()]
+ 
+    df = pd.DataFrame(final_data).transpose().drop("key")
     df.columns = keys
     df["date"] = soup.find_all('meta', attrs={'name': 'dcterms.issued'})[0]['content']
 
