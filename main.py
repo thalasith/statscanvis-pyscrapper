@@ -25,8 +25,8 @@ scheduler = BackgroundScheduler()
 job = scheduler.add_job(monthly_employment_by_industry_job, 'cron', day='last', hour=16, minute=00)
 
 # job = scheduler.add_job(test_job, 'cron', day_of_week ='mon-sun', hour=16, minute=00)
-for job in scheduler.get_jobs():
-    job.modify(next_run_time=datetime.now())
+# for job in scheduler.get_jobs():
+#     job.modify(next_run_time=datetime.now())
 scheduler.start()
 
 @app.route("/")
