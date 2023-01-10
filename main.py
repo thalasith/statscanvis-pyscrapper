@@ -6,6 +6,7 @@ try:
     from . import data_pipeline
 except:
     import data_pipeline
+print('mysql+pymysql://' + os.getenv("USERNAME") + ':' + os.getenv("PASSWORD") + '@' + os.getenv("HOST") + '/' + os.getenv("DATABASE") )
 
 app = Flask(__name__)
 
@@ -31,6 +32,7 @@ for job in scheduler.get_jobs():
 @app.route("/")
 def home():
     return "Hi there!"
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=os.getenv("PORT", default=5000))
