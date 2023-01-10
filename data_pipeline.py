@@ -23,21 +23,26 @@ def data_pipeline_job(pid, table_name, pick_members_1, pick_members_2,filter_nam
     pick_members_2_dict = dict(zip(pick_members_2["names"], pick_members_2["values"]))
 
     result = [(x, y) for x in pick_members_1["names"] for y in pick_members_2["names"]]
-    ssl_args = {'ssl_ca': "/etc/ssl/cert.pem"}
+    # ssl_args = {'ssl_ca': "/etc/ssl/cert.pem"}
     
-    conn_string = 'mysql+pymysql://' + os.getenv("USERNAME") + ':' + os.getenv("PASSWORD") + '@' + os.getenv("HOST") + '/' + os.getenv("DATABASE") 
+    conn_string = 'mysql+pymysql://' + os.environ["USERNAME"] + ':' + os.environ["PASSWORD"] + '@' + os.environ["HOST"] + '/' + os.environ["DATABASE"] 
 
     for x, y in result:
         geography=pick_members_1_dict[x]
         type_of_employee=pick_members_2_dict[y]
-        month= today.strftime("%B") + " " + str(today.year)
         url = 'https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=' + pid + '&pickMembers%5B0%5D='+ x + '&pickMembers%5B1%5D='+ y + '&cubeTimeFrame.startMonth='+ start_month + '&cubeTimeFrame.startYear=' + start_year + '&cubeTimeFrame.endMonth=' + end_month +'&cubeTimeFrame.endYear=' + end_year + '&referencePeriods=' + referencePeriods
         df = scrapper.simple_scrapper(url, filter_names).iloc[-1]
         latest_month = df["month"]
         
         query = "SELECT * FROM " + table_name +  " WHERE geography = '" + geography + "' AND type_of_employee = '" + type_of_employee + "' AND month = '" + latest_month + "';"
 
-        engine = create_engine(conn_string, connect_args=ssl_args)
+        engine = create_engine(conn_string, connect_args={
+        "ssl": {
+            "ssl_ca": "ca.pem",
+            "ssl_cert": "client-cert.pem",
+            "ssl_key": "client-key.pem"
+        }
+    })
         with engine.begin() as engine:
             sql_data = pd.read_sql_query(query, engine)
             sql_latest_month = sql_data["month"].values[0]
