@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 import pandas as pd
 try:
-    from . import scrapper
+    from library import scrapper
 except:
     import scrapper as scrapper
 
