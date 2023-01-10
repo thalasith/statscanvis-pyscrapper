@@ -8,7 +8,7 @@ import pandas as pd
 try:
     from . import scrapper
 except:
-    import scrapper
+    import scrapper as scrapper
 
 bold_green = "\x1b[32;1m"
 reset = "\x1b[0m"

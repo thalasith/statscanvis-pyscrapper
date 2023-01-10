@@ -2,10 +2,7 @@ from flask import Flask
 from datetime import datetime
 from apscheduler.schedulers.background import BackgroundScheduler
 import os
-try:
-    from . import data_pipeline
-except:
-    import data_pipeline
+import library.data_pipeline as data_pipeline
 
 app = Flask(__name__)
 
@@ -23,8 +20,8 @@ scheduler = BackgroundScheduler()
 # schedule an apscheduler job to run monthly_employment_by_industry_job every last day of the month
 job = scheduler.add_job(monthly_employment_by_industry_job, 'cron', day='last', hour=16, minute=00)
 
-for job in scheduler.get_jobs():
-    job.modify(next_run_time=datetime.now())
+# for job in scheduler.get_jobs():
+#     job.modify(next_run_time=datetime.now())
 scheduler.start()
 
 @app.route("/")
