@@ -10,6 +10,9 @@ try:
 except:
     import scrapper
 
+bold_green = "\x1b[32;1m"
+reset = "\x1b[0m"
+
 def data_pipeline_job(pid, table_name, pick_members_1, pick_members_2,filter_names) :
     today = date.today()
     four_months_ago = date.today() - relativedelta(months=+4)
@@ -23,7 +26,6 @@ def data_pipeline_job(pid, table_name, pick_members_1, pick_members_2,filter_nam
     pick_members_2_dict = dict(zip(pick_members_2["names"], pick_members_2["values"]))
 
     result = [(x, y) for x in pick_members_1["names"] for y in pick_members_2["names"]]
-    # ssl_args = {'ssl_ca': "/etc/ssl/cert.pem"}
     
     conn_string = 'mysql+pymysql://' + os.environ["USERNAME"] + ':' + os.environ["PASSWORD"] + '@' + os.environ["HOST"] + '/' + os.environ["DATABASE"] 
 
@@ -53,4 +55,4 @@ def data_pipeline_job(pid, table_name, pick_members_1, pick_members_2,filter_nam
                 df.to_sql(table_name, engine, if_exists="append", index=False)
                 print("Inserted data from " + x + " and " + y + " into " + table_name + " successfully")
     
-    print("Data pipeline job completed for " + table_name + " table at " + str(today))
+    print(bold_green +"Data pipeline job completed for " + table_name + " table at " + str(today) + reset)
