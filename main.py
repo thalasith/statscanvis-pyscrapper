@@ -21,7 +21,7 @@ def monthly_employment_by_industry_job():
 test = "Hi there, welcome to my data pipeline!"
 scheduler = BackgroundScheduler()
 # schedule an apscheduler job to run monthly_employment_by_industry_job every last day of the month
-job = scheduler.add_job(monthly_employment_by_industry_job, 'cron', day='day', hour=16, minute=00)
+job = scheduler.add_job(monthly_employment_by_industry_job, 'cron', day='last', hour=16, minute=00)
 
 scheduler.start()
 
