@@ -25,6 +25,9 @@ def isfloat(num):
     except ValueError:
         return False
 
+def clean_string(string):
+    return string.replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()[:60]
+
 def simple_scrapper(url, filter_names = []):
     # Loading and parsing the data from the StatsCan website.
     # Data is presented as a jquery function that is called to generate the table. We parse out the relevant code and return back the data.
@@ -58,7 +61,7 @@ def simple_scrapper(url, filter_names = []):
 
     for row in new_rows:
         if not isfloat(row):
-            key = row.replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()[:60]
+            key = clean_string(row)
             keys.append(key)
             data[key] = []
         if isfloat(row):
@@ -73,7 +76,7 @@ def simple_scrapper(url, filter_names = []):
     df["date"] = soup.find_all('meta', attrs={'name': 'dcterms.issued'})[0]['content']
 
     for filter_name in filter_names:
-        new_name = filter_name.replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()[:60]
+        new_name = clean_string(filter_name)
         df[new_name] = next(item for item in json_data['headers']["columnHeaders"] if item["name"] == filter_name)["values"][0]["value"]
     
     df['month'] = df.index
