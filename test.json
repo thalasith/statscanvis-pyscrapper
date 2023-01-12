@@ -1,0 +1,59 @@
+[
+  {
+    "selectedOptionIndex": 1,
+    "dropDownOptions": [
+      { "id": "2.1", "text": "Employment for all employees" },
+      {
+        "id": "2.2",
+        "text": "Average weekly earnings including overtime for all employees"
+      }
+    ]
+  },
+  {
+    "selectedOptionIndex": 8,
+    "dropDownOptions": [
+      {
+        "id": "3.1",
+        "text": "Industrial aggregate including unclassified businesses"
+      },
+      {
+        "id": "3.2",
+        "text": "Industrial aggregate excluding unclassified businesses"
+      },
+      { "id": "3.3", "text": "Goods producing industries" },
+      { "id": "3.4", "text": "Forestry, logging and support" },
+      { "id": "3.10", "text": "Mining, quarrying, and oil and gas extraction" },
+      { "id": "3.17", "text": "Utilities" },
+      { "id": "3.21", "text": "Construction" },
+      { "id": "3.34", "text": "Manufacturing" },
+      { "id": "3.35", "text": "Non-durable goods" },
+      { "id": "3.84", "text": "Durable goods" },
+      { "id": "3.143", "text": "Service producing industries" },
+      { "id": "3.144", "text": "Trade" },
+      { "id": "3.145", "text": "Wholesale trade" },
+      { "id": "3.178", "text": "Retail trade" },
+      { "id": "3.215", "text": "Transportation and warehousing" },
+      { "id": "3.253", "text": "Information and cultural industries" },
+      { "id": "3.267", "text": "Finance and insurance" },
+      { "id": "3.284", "text": "Real estate and rental and leasing" },
+      {
+        "id": "3.295",
+        "text": "Professional, scientific and technical services"
+      },
+      { "id": "3.306", "text": "Management of companies and enterprises" },
+      {
+        "id": "3.307",
+        "text": "Administrative and support, waste management and remediation services"
+      },
+      { "id": "3.321", "text": "Educational services" },
+      { "id": "3.331", "text": "Health care and social assistance" },
+      { "id": "3.354", "text": "Arts, entertainment and recreation" },
+      { "id": "3.367", "text": "Accommodation and food services" },
+      {
+        "id": "3.377",
+        "text": "Other services (except public administration)"
+      },
+      { "id": "3.393", "text": "Public administration" }
+    ]
+  }
+]

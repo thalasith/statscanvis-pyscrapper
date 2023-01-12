@@ -25,7 +25,7 @@ def isfloat(num):
     except ValueError:
         return False
 
-def simple_scrapper(url, filter_names):
+def simple_scrapper(url, filter_names = []):
     # Loading and parsing the data from the StatsCan website.
     # Data is presented as a jquery function that is called to generate the table. We parse out the relevant code and return back the data.
     #The data as of 2021-03-01 is between a script tag with the following id: "tableContainerElement = $(".tableContainer").clone();" 
@@ -43,7 +43,6 @@ def simple_scrapper(url, filter_names):
     for item in headers["values"]:
             header_values.append(item["value"])
     
-
     # We need to transform the data into a format that is easier to work with.
     # The data is presented as a list of dictionaries. Each dictionary contains a list of dictionaries.
     # We need to flatten the data into a list of dictionaries and afterwards return a list of the values from the dictionary.
