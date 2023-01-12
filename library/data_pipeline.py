@@ -44,15 +44,7 @@ def data_pipeline_job(pid, table_name, pick_members_dict,filter_names):
             "ssl_key": "client-key.pem"
         }
     })
-        with engine.begin() as engine:
-            sql_data = pd.read_sql_query(query, engine)
-            sql_latest_month = sql_data["month"].values[0]
-            
-            if (sql_latest_month == latest_month):
-                print(latest_month + " " + geography + " "+ type_of_employee + " data already exists in " + table_name + " table")
-            else:
-                df.to_sql(table_name, engine, if_exists="append", index=False)
-                print("Inserted data from " + x + " and " + y + " into " + table_name + " successfully")
+        upload_sql(query, conn_string, df, table_name, latest_month, geography, type_of_employee, x, y)
     else:
         for x, y in result:
             geography=pick_members_1_dict[x]
@@ -70,14 +62,25 @@ def data_pipeline_job(pid, table_name, pick_members_dict,filter_names):
                 "ssl_key": "client-key.pem"
             }
         })
-            with engine.begin() as engine:
-                sql_data = pd.read_sql_query(query, engine)
-                sql_latest_month = sql_data["month"].values[0]
-                
-                if (sql_latest_month == latest_month):
-                    print(latest_month + " " + geography + " "+ type_of_employee + " data already exists in " + table_name + " table")
-                else:
-                    df.to_sql(table_name, engine, if_exists="append", index=False)
-                    print("Inserted data from " + x + " and " + y + " into " + table_name + " successfully")
+        upload_sql(query, conn_string, df, table_name, latest_month, geography, type_of_employee, x, y)
         
     print(bold_green +"Data pipeline job completed for " + table_name + " table at " + str(today) + reset)
+
+def upload_sql(query, conn_string, data, table_name, latest_month, geography, type_of_employee, x, y):
+    engine = create_engine(conn_string, connect_args={
+        "ssl": {
+            "ssl_ca": "ca.pem",
+            "ssl_cert": "client-cert.pem",
+            "ssl_key": "client-key.pem"
+        }
+    })
+    with engine.begin() as engine:
+        sql_data = pd.read_sql_query(query, engine)
+        sql_latest_month = sql_data["month"].values[0]
+        
+        if (sql_latest_month == latest_month):
+            print(latest_month + " " + geography + " "+ type_of_employee + " data already exists in " + table_name + " table")
+        else:
+            data.to_sql(table_name, engine, if_exists="append", index=False)
+            print("Inserted data from " + x + " and " + y + " into " + table_name + " successfully")
+    
