@@ -24,50 +24,49 @@ def data_pipeline_job(pid, table_name, pick_members_dict, filter_names, transpos
     referencePeriods = start_year + start_month + "01" + "%2C" + end_year + end_month + "28" 
     keys = list(pick_members_dict.keys())
     values = list((pick_members_dict[key]["names"] for key in keys))
-    
+
+    filter_names_keys = list(filter_names.keys())
+    filter_names_values = list(filter_names.values())
     pick_members_1_dict = dict(zip(pick_members_dict["&pickMembers%5B0%5D="]["names"], pick_members_dict["&pickMembers%5B0%5D="]["values"]))
     pick_members_2_dict = dict(zip(pick_members_dict["&pickMembers%5B1%5D="]["names"], pick_members_dict["&pickMembers%5B1%5D="]["values"]))
 
     if transpose:
         final_df = pd.DataFrame()
-
     result = [(x, y) for x in values[0] for y in values[1]]
+
     if pick_members_dict == {}:
         url = 'https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=' + pid + '&cubeTimeFrame.startMonth='+ start_month + '&cubeTimeFrame.startYear=' + start_year + '&cubeTimeFrame.endMonth=' + end_month +'&cubeTimeFrame.endYear=' + end_year + '&referencePeriods=' + referencePeriods
         df = scrapper.simple_scrapper(url, filter_names).iloc[-1]
         latest_month = df["month"]
         
-        # if transpose:
-        #     new_df = pd.DataFrame(df).T.melt(['date', 'month'], var_name='province', value_name=industry)
-
         query = "SELECT * FROM " + table_name +  " WHERE geography = '" + pick_member_1 + "' AND type_of_employee = '" + pick_member_2 + "' AND month = '" + latest_month + "';"
 
-        upload_sql(query, df, table_name, latest_month, pick_member_1, pick_member_2, x, y)
     else:
         for x, y in result:
             pick_member_1=pick_members_1_dict[x]
             pick_member_2=pick_members_2_dict[y]
             url = 'https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=' + pid + '&pickMembers%5B0%5D='+ x + '&pickMembers%5B1%5D='+ y + '&cubeTimeFrame.startMonth='+ start_month + '&cubeTimeFrame.startYear=' + start_year + '&cubeTimeFrame.endMonth=' + end_month +'&cubeTimeFrame.endYear=' + end_year + '&referencePeriods=' + referencePeriods
-            df = scrapper.simple_scrapper(url, filter_names).iloc[-1]
-            print("\x1b[0m" + "Testing!")
+            df = scrapper.simple_scrapper(url, filter_names.values()).iloc[-1]
             latest_month = df["month"]
 
             if transpose:
                 new_df = pd.DataFrame(df).T.melt(['date', 'month'], var_name='province', value_name=pick_member_2)
+                provinces = ['canada', 'newfoundland_and_labrador', 'prince_edward_island', 'nova_scotia', 'new_brunswick', 'quebec', 'ontario', 'manitoba', 'saskatchewan', 'alberta', 'british_columbia', 'yukon', 'northwest_territories', 'nunavut']
+                new_df = new_df[new_df['province'].isin(provinces)]
                 if final_df.empty:
                     final_df["month"] = new_df["month"]
                     final_df["date"] = new_df["date"]
+                    final_df["province"] = new_df["province"]
 
                 final_df[pick_member_2] = new_df[pick_member_2]
             
-            query = "SELECT * FROM " + table_name +  " WHERE geography = '" + pick_member_1 + "' AND type_of_employee = '" + pick_member_2 + "' AND month = '" + latest_month + "';"
-            
-            upload_sql(query, df, table_name, latest_month, pick_member_1, pick_member_2, x, y)
-    # return final_df if transpose is true, return df if transpose is false
-    # if transpose:
-    #     return final_df
-    # else:
-    #     return df
+            if transpose == False:
+                query = "SELECT * FROM " + table_name +  " WHERE geography = '" + pick_member_1 + "' AND type_of_employee = '" + pick_member_2 + "' AND month = '" + latest_month + "';"
+                upload_sql(query, df, table_name, latest_month, pick_member_1, pick_member_2, x, y)
+        
+        if transpose == True:
+            query = "SELECT * FROM " + table_name + " WHERE month = '" + latest_month + "';"
+            upload_sql(query, final_df, table_name, latest_month, pick_member_1, pick_member_2, x, y)
         
     print(bold_green +"Data pipeline job completed for " + table_name + " table at " + str(today) + reset)
 
