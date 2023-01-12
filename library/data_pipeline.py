@@ -42,7 +42,7 @@ def data_pipeline_job(pid, table_name, pick_members_dict, filter_names, transpos
 
         query = "SELECT * FROM " + table_name +  " WHERE geography = '" + pick_member_1 + "' AND type_of_employee = '" + pick_member_2 + "' AND month = '" + latest_month + "';"
 
-        # upload_sql(query, df, table_name, latest_month, pick_member_1, pick_member_2, x, y)
+        upload_sql(query, df, table_name, latest_month, pick_member_1, pick_member_2, x, y)
     else:
         for x, y in result:
             pick_member_1=pick_members_1_dict[x]
@@ -61,8 +61,8 @@ def data_pipeline_job(pid, table_name, pick_members_dict, filter_names, transpos
                 final_df[pick_member_2] = new_df[pick_member_2]
             
             query = "SELECT * FROM " + table_name +  " WHERE geography = '" + pick_member_1 + "' AND type_of_employee = '" + pick_member_2 + "' AND month = '" + latest_month + "';"
-            print(query)
-            # upload_sql(query, df, table_name, latest_month, pick_member_1, pick_member_2, x, y)
+            
+            upload_sql(query, df, table_name, latest_month, pick_member_1, pick_member_2, x, y)
     # return final_df if transpose is true, return df if transpose is false
     # if transpose:
     #     return final_df
