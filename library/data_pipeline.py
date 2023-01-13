@@ -56,7 +56,7 @@ def data_pipeline_job(pid, table_name, pick_members_dict, filter_names, transpos
                 if final_df.empty:
                     final_df["month"] = new_df["month"]
                     final_df["date"] = new_df["date"]
-                    final_df["province"] = new_df["province"]
+                    final_df["province"] = final_df["province"].str.replace("_", " ").str.title()
 
                 final_df[pick_member_2] = new_df[pick_member_2]
             
