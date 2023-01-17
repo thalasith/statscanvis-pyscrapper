@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import create_engine
 import os
@@ -46,8 +46,12 @@ def data_pipeline_job(pid, table_name, pick_members_dict, filter_names, transpos
             pick_member_1=pick_members_1_dict[x]
             pick_member_2=pick_members_2_dict[y]
             url = 'https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=' + pid + '&pickMembers%5B0%5D='+ x + '&pickMembers%5B1%5D='+ y + '&cubeTimeFrame.startMonth='+ start_month + '&cubeTimeFrame.startYear=' + start_year + '&cubeTimeFrame.endMonth=' + end_month +'&cubeTimeFrame.endYear=' + end_year + '&referencePeriods=' + referencePeriods
-            df = scrapper.simple_scrapper(url, filter_names.values()).iloc[-1]
+            df = scrapper.simple_scrapper(url, filter_names.values())
+            df.rename(columns = {'type_of_employees':'type_of_employee'}, inplace = True)
+            df = df.iloc[-1]
             latest_month = df["month"]
+            end_of_month = latest_month.replace(day=28) + timedelta(days=4)
+            end_of_month = end_of_month - timedelta(days=end_of_month.day)
 
             if transpose:
                 new_df = pd.DataFrame(df).T.melt(['date', 'month'], var_name='province', value_name=pick_member_2)
@@ -56,12 +60,13 @@ def data_pipeline_job(pid, table_name, pick_members_dict, filter_names, transpos
                 if final_df.empty:
                     final_df["month"] = new_df["month"]
                     final_df["date"] = new_df["date"]
-                    final_df["province"] = final_df["province"].str.replace("_", " ").str.title()
+                    final_df["geography"] = final_df["province"].str.replace("_", " ").str.title()
 
                 final_df[pick_member_2] = new_df[pick_member_2]
             
             if transpose == False:
-                query = "SELECT * FROM " + table_name +  " WHERE geography = '" + pick_member_1 + "' AND type_of_employee = '" + pick_member_2 + "' AND month = '" + latest_month + "';"
+                query = "SELECT * FROM " + table_name +  " WHERE geography = '" + pick_member_1 + "' AND type_of_employee = '" + pick_member_2 + "' AND month BETWEEN '" + str(latest_month) + "' AND '" + str(end_of_month) +"';"
+
                 upload_sql(query, df, table_name, latest_month, pick_member_1, pick_member_2, x, y)
         
         if transpose == True:
@@ -79,12 +84,13 @@ def upload_sql(query, data, table_name, latest_month, pick_member_1, pick_member
             "ssl_key": "client-key.pem"
         }
     })
+
     with engine.begin() as engine:
         sql_data = pd.read_sql_query(query, engine)
-        sql_latest_month = sql_data["month"].values[0]
+        sql_latest_month = pd.to_datetime(sql_data["month"].values[0], utc=True)
         
         if (sql_latest_month == latest_month):
-            print(latest_month + " " + pick_member_1 + " "+ pick_member_2 + " data already exists in " + table_name + " table")
+            print(str(latest_month) + " " + pick_member_1 + " "+ pick_member_2 + " data already exists in " + table_name + " table")
         else:
             data.to_sql(table_name, engine, if_exists="append", index=False)
             print("Inserted data from " + x + " and " + y + " into " + table_name + " successfully")

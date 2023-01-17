@@ -1,10 +1,14 @@
 import pandas as pd
 import requests
 import json
+from datetime import datetime
+from datetime import timezone
 from bs4 import BeautifulSoup
 from sqlalchemy import create_engine
+import pytz
 import itertools
 import os
+import re
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -26,7 +30,17 @@ def isfloat(num):
         return False
 
 def clean_string(string):
-    return string.replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()[:60]
+    new_string = re.sub("([\(\[]).*?([\)\]])", '', string).replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()[:60]
+    if new_string[-1] == '_':
+        final_string = new_string[:-1]
+    else:
+        final_string = new_string
+    return final_string
+def convert_to_date(string_date):
+    # convert string to UTC date time
+
+    return datetime.strptime(string_date, "%B %Y").replace(tzinfo=pytz.UTC)
+
 
 def simple_scrapper(url, filter_names = []):
     # Loading and parsing the data from the StatsCan website.
@@ -80,17 +94,17 @@ def simple_scrapper(url, filter_names = []):
         df[new_name] = next(item for item in json_data['headers']["columnHeaders"] if item["name"] == filter_name)["values"][0]["value"]
     
     df['month'] = df.index
+    df['month'] = df['month'].apply(convert_to_date)
+    df.rename(columns = {'type_of_employees':'type_of_employee'}, inplace=True)
     df.reset_index(drop=True, inplace=True)
     
     return df
 
-def drop_table(table_list):
+def drop_table(table_name):
     # Connecting to Planet Scale
     ssl_args = {'ssl_ca': "/etc/ssl/cert.pem"}
 
     conn_string = 'mysql+pymysql://' + os.getenv("USERNAME") + ':' + os.getenv("PASSWORD") + '@' + os.getenv("HOST") + '/' + os.getenv("DATABASE") 
-
-    table_name = ["monthly_employment_by_industry"]
 
     for table in table_name:
         engine = create_engine(conn_string, connect_args=ssl_args)
