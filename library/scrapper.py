@@ -30,12 +30,13 @@ def isfloat(num):
         return False
 
 def clean_string(string):
-    new_string = re.sub("([\(\[]).*?([\)\]])", '', string).replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()[:60]
+    new_string = re.sub("([[]).*?([]])", '', string).replace(" ", "_").replace(",","").replace("(","").replace(")","").replace("-","_").replace("__","_").lower()[:60]
     if new_string[-1] == '_':
         final_string = new_string[:-1]
     else:
         final_string = new_string
     return final_string
+    
 def convert_to_date(string_date):
     # convert string to UTC date time
 
