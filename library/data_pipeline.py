@@ -25,8 +25,6 @@ def data_pipeline_job(pid, table_name, pick_members_dict, filter_names, transpos
     keys = list(pick_members_dict.keys())
     values = list((pick_members_dict[key]["names"] for key in keys))
 
-    filter_names_keys = list(filter_names.keys())
-    filter_names_values = list(filter_names.values())
     pick_members_1_dict = dict(zip(pick_members_dict["&pickMembers%5B0%5D="]["names"], pick_members_dict["&pickMembers%5B0%5D="]["values"]))
     pick_members_2_dict = dict(zip(pick_members_dict["&pickMembers%5B1%5D="]["names"], pick_members_dict["&pickMembers%5B1%5D="]["values"]))
 

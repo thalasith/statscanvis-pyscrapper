@@ -110,7 +110,6 @@ def drop_table(table_name):
     for table in table_name:
         engine = create_engine(conn_string, connect_args=ssl_args)
         drop_table_query = 'DROP TABLE ' + table + ';'
-        # print(drop_table_query)
         with engine.connect() as con:
             con.execute(drop_table_query)
         print("Successfully dropped table " + table)
