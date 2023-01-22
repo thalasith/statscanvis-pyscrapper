@@ -4,7 +4,7 @@ The data tables in Stats Canada has a lot of useful data that gets updated on a 
 
 This project will help alleviate those burdens by building data pipelines that get regularly updated and the second part is to build visualization tools via a frontend. This library is focused on the first part of this project and is split into two components.
 
-<h2> Components to this Library <h2>
+<h2> Components to this Library </h2>
 
 <h3> Notebooks for Data Exploration, initializing the data, and building data pipelines. </h4>
 
@@ -34,7 +34,7 @@ The Stats Canada table currently provides multiple filters on their data sets. D
 
 We scrape all data available in 2022 as an initialization step.
 
-<h4> Data Pipeline <h4>
+<h4> Data Pipeline </h4>
 
 Once we have initialized the data, we need to keep the data up to date. In this notebook, we build a data pipeline that checks the latest data in the MYSQL database vs the latest data that is provided by Stats Canada.
 
@@ -42,7 +42,7 @@ If the latest Stats Canada data is already in the MYSQL database, the pipeline w
 
 We make any updates here in the data_pipeline library and will be used in our other component of this project - scheduling the data pipeline.
 
-<h3> Data Pipeline </h4>
+<h4> Data Pipeline </h4>
 
 In this component, we build a small Flask app that is pushed to a server and runs these jobs to ensure the data is up to date.
 
